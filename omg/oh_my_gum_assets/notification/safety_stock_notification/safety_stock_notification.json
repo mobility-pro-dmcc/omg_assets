@@ -1,0 +1,31 @@
+{
+ "attach_files": "",
+ "attach_print": 0,
+ "channel": "Email",
+ "creation": "2026-09-23 10:10:50.812451",
+ "days_in_advance": 0,
+ "docstatus": 0,
+ "doctype": "Notification",
+ "document_type": "Notification",
+ "enabled": 1,
+ "event": "Custom",
+ "idx": 0,
+ "is_standard": 1,
+ "message": "<p>The following items have dropped below their safety stock levels:</p>\n\n<ul>\n{% for row in doc.flags.low_stock_items %}\n    <li><strong>Item:</strong> {{ row[1] }} | <strong>Warehouse:</strong> {{ row[0] }} | <strong>Current Balance:</strong> {{ row[2] }}</li>\n{% endfor %}\n</ul>\n",
+ "message_type": "Markdown",
+ "modified": "2026-09-27 10:59:55.595946",
+ "modified_by": "Administrator",
+ "module": "Oh My Gum Assets",
+ "name": "Safety Stock notification",
+ "notification_title": "Safety Stock Alert",
+ "notification_type": "Alert",
+ "owner": "ahmed.zaytoon@mobilityp.com",
+ "recipients": [
+  {
+   "receiver_by_role": "Stock Manager"
+  }
+ ],
+ "send_system_notification": 1,
+ "send_to_all_assignees": 0,
+ "subject": "Safty Stock notification"
+}

@@ -145,6 +145,15 @@ app_license = "mit"
 # 	}
 # }
 
+doc_events = {
+    "Sales Invoice":{
+        "on_submit": "omg.server_script.safety_stock.evaluate_notification"
+	},
+    "Stock Entry":{
+		"on_submit": "omg.server_script.safety_stock.evaluate_notification"
+	}
+}
+
 # Scheduled Tasks
 # ---------------
 
