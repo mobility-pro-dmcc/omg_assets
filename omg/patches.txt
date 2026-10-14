@@ -4,3 +4,4 @@
 
 [post_model_sync]
 omg.patches.safety_stock_custom_fields
+omg.patches.sales_invoice_fees_fields

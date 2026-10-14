@@ -1,5 +1,6 @@
 import frappe 
 import json
+from frappe import _
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cint, cstr, flt, get_link_to_form
 

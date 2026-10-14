@@ -1,0 +1,57 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Sales Invoice",
+  "enabled": 1,
+  "modified": "2025-03-01 10:47:53.881700",
+  "module": null,
+  "name": "Sales Invoice List",
+  "script": "frappe.listview_settings['Sales Invoice'] = {\n    add_fields: [\"status\", \"custom_payment_status\"],\n    get_indicator: function (doc) {\n        if (doc.custom_payment_status === \"Awaiting Tracking #\") {\n            return [\"Awaiting Tracking #\", \"orange\", \"custom_payment_status\"];\n        } else if (doc.custom_payment_status === \"Details TBC from Client\") {\n            return [\"Details TBC from Client\", \"blue\", \"custom_payment_status\"];\n        } else if (doc.custom_payment_status === \"Shipped\") {\n            return [\"Shipped\", \"green\", \"custom_payment_status\"];\n        } else if (doc.custom_payment_status === \"Not Shipped Yet\") {\n            return [\"Not Shipped Yet\", \"red\", \"custom_payment_status\"];\n        } else if (doc.custom_payment_status === \"Delivered\") {\n            return [\"Delivered\", \"darkgreen\", \"custom_payment_status\"];\n        } else if (doc.custom_payment_status === \"Issues with Delivery\") {\n            return [\"Issues with Delivery\", \"red\", \"custom_payment_status\"];\n        }\n    }\n};",
+  "view": "List"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Sales Invoice",
+  "enabled": 1,
+  "modified": "2026-09-14 10:35:36.198386",
+  "module": null,
+  "name": "Sales Invoice - Form",
+  "script": "frappe.ui.form.on('Sales Invoice', {\n    custom_code_percentage: function (frm) {\n        calculate_promo_discount(frm);\n    },\n    custom_additional_discount_percentage1: function (frm) {\n        calculate_additional_discount(frm);\n    },\n    custom_code_amount: function (frm) {\n        update_total_discount(frm);\n    },\n    custom_additional_discount_amount1: function (frm) {\n        update_total_discount(frm);\n    },\n    custom_location_zone: function(frm){\n        frappe.db.get_value('Warehouse', {'custom_location_zone': frm.doc.custom_location_zone}, 'name')\n        .then(res => {\n            if (res.message && res.message.name) {\n                frm.set_value('set_warehouse', res.message.name);\n            }\n        });\n    }\n});\n\nfunction calculate_promo_discount(frm) {\n    let percentage = frm.doc.custom_code_percentage || 0;\n    let net_total = frm.doc.net_total || 0;\n\n    let promo_amount = (net_total * percentage) / 100;  // Calculate promo discount\n    frm.set_value('custom_code_amount', promo_amount);\n\n    update_total_discount(frm); // Recalculate total discount\n}\n\nfunction calculate_additional_discount(frm) {\n    let percentage = frm.doc.custom_additional_discount_percentage1 || 0;\n    let net_total = frm.doc.net_total || 0;\n\n    let additional_discount = (net_total * percentage) / 100;  // Calculate additional discount\n    frm.set_value('custom_additional_discount_amount1', additional_discount);\n\n    update_total_discount(frm); // Recalculate total discount\n}\n\nfunction update_total_discount(frm) {\n    let promo_amount = frm.doc.custom_code_amount || 0;\n    let additional_discount = 0;\n\n    let total_discount = promo_amount + additional_discount;  // Sum both discounts\n    frm.set_value('discount_amount', total_discount); // Update hidden discount field\n\n    frm.refresh_field('discount_amount');\n}\n\n\n//////////////////////////////////////////////////////////\nfrappe.ui.form.on(\"Sales Invoice\", {\n    validate: function(frm){\n        frm.doc.items.map(row=>{\n            frappe.model.set_value(row.doctype, row.name, 'expense_account', \"Cost of Goods Sold - OMG\");\n        });\n    }\n});\n\nfrappe.ui.form.on(\"Sales Invoice Item\", {\n    item_code: function(frm, cdt, cdn){\n        let row = locals[cdt][cdn];\n        frappe.call({\n            method:\"get_item_quantity_factor\",\n            args: {item_code:row.item_code},\n            callback: function(r){\n                let factor = r.message;\n                frappe.model.set_value(cdt, cdn, \"qty_factor\", factor);\n            }\n        });\n    },\n    quantity_in_units: function(frm, cdt, cdn){\n        let row = locals[cdt][cdn];\n        frappe.model.set_value(cdt, cdn, \"qty\", row.quantity_in_units /* / row.qty_factor*/);\n    }\n});",
+  "view": "Form"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Lead",
+  "enabled": 1,
+  "modified": "2025-05-26 11:43:12.421246",
+  "module": null,
+  "name": "Lead - Form",
+  "script": "frappe.ui.form.on('Lead', {\n  refresh: function (frm) {\n    if (!frm.is_new()) {\n      frm.set_df_property('custom_send_samples', 'options',\n        `<button class=\"btn btn-primary\" id=\"create_stock_entry_btn\">\n           Send Sample\n         </button>`\n      );\n\n      setTimeout(() => {\n        $('#create_stock_entry_btn').on('click', async function () {\n          if (!frm.doc.custom_sample || frm.doc.custom_sample.length === 0) {\n            frappe.msgprint(__('No items in custom_sample table.'));\n            return;\n          }\n\n          if (!frm.doc.custom_warehouse) {\n            frappe.msgprint(__('Please select a warehouse.'));\n            return;\n          }\n\n          const stock_entry = frappe.model.get_new_doc('Stock Entry');\n          stock_entry.stock_entry_type = 'Material Issue';\n          stock_entry.from_warehouse = frm.doc.custom_warehouse;\n          stock_entry.custom_reference_lead = frm.doc.name;\n\n          for (const sample of frm.doc.custom_sample) {\n            if (!sample.item_code || !sample.qty) continue;\n\n            const uom = await get_uom(sample.item_code);\n\n            const item = frappe.model.add_child(stock_entry, 'Stock Entry Detail', 'items');\n            item.item_code = sample.item_code;\n            item.qty = sample.qty;\n            item.s_warehouse = frm.doc.custom_warehouse;\n            item.uom = uom;\n            item.stock_uom = uom;\n            item.conversion_factor = 1;\n            item.transfer_qty = sample.qty;\n          }\n\n          frappe.model.sync(stock_entry);\n          frappe.set_route('Form', 'Stock Entry', stock_entry.name);\n        });\n      }, 100);\n    }\n  },\n\n  before_save: function (frm) {\n    let total = 0;\n    for (let row of frm.doc.custom_sample) {\n      total += row.qty;\n    }\n    frm.set_value(\"custom_total_quantity\", total);\n  }\n});\n\nasync function get_uom(item_code) {\n  try {\n    const res = await frappe.db.get_value('Item', item_code, 'stock_uom');\n    return res.message.stock_uom || 'Nos';\n  } catch (err) {\n    return 'Nos';\n  }\n}\n",
+  "view": "Form"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Stock Entry",
+  "enabled": 1,
+  "modified": "2026-10-05 08:55:27.919539",
+  "module": null,
+  "name": "Stock Entry",
+  "script": "frappe.ui.form.on(\"Stock Entry\", {\n    onload: function(frm) {\n        if (frm.is_new()) {\n            frm.clear_table('transfer_expenses');\n        }\n        // stock expenses change the delete button behavior\n        if(frm.doc.docstatus === 1)\n\t\t    changeEventListener(frm);\n    },\n\trefresh(frm) {\n\t\tfrm.set_query(\"cash_account\", \"transfer_expenses\", () => {\n\t\t\treturn {\n\t\t\t\tfilters: {\n\t\t\t\t\taccount_type: [\"in\",[\"Bank\",\"Cash\", \"Current Liability\"]],\n\t\t\t\t\tcompany: frm.doc.company,\n\t\t\t\t\tis_group: 0\n\t\t\t\t}\n\t\t\t};\n\t\t});\n\t\tfrm.set_query(\"expense_account\", \"transfer_expenses\", () => {\n\t\t\treturn {\n\t\t\t\tfilters: {\n\t\t\t\t\troot_type: \"Expense\",\n\t\t\t\t\tcompany: frm.doc.company,\n\t\t\t\t\tis_group: 0\n\t\t\t\t}\n\t\t\t};\n\t\t});\n\t\t// stock expenses change the delete button behavior\n\t\tif(frm.doc.docstatus === 1)\n\t\t    changeEventListener(frm);\n\t}\n});\n\nfunction changeEventListener(frm){\n    if(frm.fields_dict.transfer_expenses.grid.grid_buttons.find(\".grid-remove-rows[data-action='delete_rows']\").length){\n        frm.fields_dict.transfer_expenses.grid.grid_buttons.find(\".grid-remove-rows\").removeAttr(\"data-action\");\n        frm.fields_dict.transfer_expenses.grid.grid_buttons.find(\".grid-remove-rows\").click(() => {\n            let grid = frm.fields_dict.transfer_expenses.grid,\n                jvs = grid.get_selected_children().filter(row=>row.journal_voucher).map(row=>row.journal_voucher);\n            if(jvs.length){\n                frappe.confirm(\"Are You sure you want To delete these rows <br>The linked Journal Vouchers will be Cancelled!\",\n                    () =>{\n                        grid.delete_rows();\n                        setTimeout(async ()=>{\n                            await frm.save(\"Update\");\n                            jvs.map(jv=>{\n                                frappe.call({\n                                    method: \"mcancel_or_delete_doc\",\n                                    args:{\n                                        action: \"cancel\",\n                                        doctype: \"Journal Entry\",\n                                        docname:  jv,\n                                    }\n                                });\n                            });\n                        }, 500);\n                    },\n                ()=>{});\n            } else {\n                grid.delete_rows();\n            }\n    \t});\n    }\n}\n\nfrappe.ui.form.on(\"Stock Entry\", {\n    validate: function(frm){\n        frm.doc.items.map(row=>{\n            frappe.model.set_value(row.doctype, row.name, 'expense_account', \"Stock Adjustment - OMG\");\n        });\n    }\n});\n",
+  "view": "Form"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Client Script",
+  "dt": "Email Account",
+  "enabled": 1,
+  "modified": "2025-10-03 16:34:50.298272",
+  "module": "Email Delivery Service",
+  "name": "Email account won't work warning",
+  "script": "frappe.ui.form.on('Email Account', {\n\trefresh(frm) {\n// \t\tif (frm.doc.enable_outgoing) {\n\t\t\tsite_name = window.location.hostname;\n\t\t\tuninstall_link = `https://cloud.frappe.io/dashboard/sites/${site_name}/apps`;\n\t\t\teds_a_tag = `<a style='text-decoration: underline;' href='https://cloud.frappe.io/marketplace/apps/email_delivery_service'>Email Delivery Service</a>`;\n\t\t\t//make a head request to /api/method/ping and check if response has server header set as 'Frappe Cloud'\n\t\t\tis_frappe_cloud = fetch('/api/method/ping', { method: 'HEAD' }).then(\n\t\t\t\t(response) => {\n\t\t\t\t\tif (response.headers.get('server') === 'Frappe Cloud') {\n\t\t\t\t\t\treturn true;\n\t\t\t\t\t}\n\t\t\t\t\treturn false;\n\t\t\t\t},\n\t\t\t);\n\t\t\tuninstall_a_tag = `<a style='text-decoration: underline;' href='${uninstall_link}'>uninstall the app</a>`;\n\t\t\tif (!is_frappe_cloud) {\n\t\t\t\tuninstall_a_tag = 'uninstall the app';\n\t\t\t}\n\t\t\tfrm.dashboard.set_headline_alert(\n\t\t\t\t__(\n\t\t\t\t\t`You have ${eds_a_tag} app installed due to which emails won't be sent from this account. Please ${uninstall_a_tag} to use current Email Account for sending.`,\n\t\t\t\t),\n\t\t\t\t'yellow',\n\t\t\t);\n// \t\t}\n\t},\n});\n",
+  "view": "Form"
+ }
+]

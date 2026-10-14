@@ -147,7 +147,11 @@ app_license = "mit"
 
 doc_events = {
     "Sales Invoice":{
-        "on_submit": "omg.server_script.safety_stock.evaluate_notification"
+        "on_submit": [
+            "omg.server_script.safety_stock.evaluate_notification",
+            "omg.overrides.sales_invoice_fees.create_fees_journal_entry",
+        ],
+        "on_cancel": "omg.overrides.sales_invoice_fees.cancel_fees_journal_entry",
 	},
     "Stock Entry":{
 		"on_submit": "omg.server_script.safety_stock.evaluate_notification"
@@ -256,3 +260,39 @@ override_whitelisted_methods = {
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+fixtures = [
+	{"dt": "Server Script"},
+	{"dt": "Client Script"},
+	{"dt": "Custom Field", "filters": [["name", "in", [
+		"Lead-custom_date_of_contact",
+		"Lead-custom_date_of_follow_up",
+		"Lead-custom_sales_channel",
+		"Lead-custom_sample",
+		"Lead-custom_sample_sent",
+		"Lead-custom_samples_tab",
+		"Lead-custom_send_samples",
+		"Lead-custom_total_quantity",
+		"Lead-custom_warehouse",
+		"Sales Invoice Item-custom_qty_factor",
+		"Sales Invoice Item-custom_quantity_in_units",
+		"Sales Invoice-custom_additional_discount_amount1",
+		"Sales Invoice-custom_additional_discount_percentage1",
+		"Sales Invoice-custom_code",
+		"Sales Invoice-custom_code_amount",
+		"Sales Invoice-custom_code_percentage",
+		"Sales Invoice-custom_column_break_svkpp",
+		"Sales Invoice-custom_comments",
+		"Sales Invoice-custom_customer_status",
+		"Sales Invoice-custom_invoice_number",
+		"Sales Invoice-custom_location_zone",
+		"Sales Invoice-custom_order_method",
+		"Sales Invoice-custom_payment_status",
+		"Sales Invoice-custom_promo_code",
+		"Sales Invoice-custom_sales_chanal",
+		"Sales Invoice-custom_shipping_cost",
+		"Sales Invoice-custom_vat",
+		"Stock Entry-custom_expenses",
+		"Stock Entry-custom_issue_expenses",
+		"Stock Entry-custom_reference_lead",
+	]]]},
+]
