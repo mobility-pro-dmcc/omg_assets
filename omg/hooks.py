@@ -151,7 +151,7 @@ doc_events = {
             "omg.server_script.safety_stock.evaluate_notification",
             "omg.overrides.sales_invoice_fees.create_fees_journal_entry",
         ],
-        "on_cancel": "omg.overrides.sales_invoice_fees.cancel_fees_journal_entry",
+        "on_cancel": "omg.server_script.sales_invoice_fees.cancel_fees_journal_entry",
 	},
     "Stock Entry":{
 		"on_submit": "omg.server_script.safety_stock.evaluate_notification"
