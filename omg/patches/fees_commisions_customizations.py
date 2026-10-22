@@ -1,3 +1,4 @@
+import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 
@@ -33,3 +34,14 @@ def execute():
 		]
 	}
 	create_custom_fields(custom_fields)
+	name = "Sales Invoice-custom_order_method"
+	if not frappe.db.exists("Custom Field", name):
+		return
+
+	frappe.db.set_value(
+		"Custom Field",
+		name,
+		{"fieldtype": "Link", "options": "Order Platform"},
+		update_modified=False,
+	)
+	frappe.clear_cache(doctype="Sales Invoice")

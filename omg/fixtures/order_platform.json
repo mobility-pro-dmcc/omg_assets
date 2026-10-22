@@ -1,0 +1,65 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.581839",
+  "name": "Faire",
+  "platform": "Faire"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.597049",
+  "name": "PO# Via Email",
+  "platform": "PO# Via Email"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.599945",
+  "name": "OMG Website (B2C)",
+  "platform": "OMG Website (B2C)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.602715",
+  "name": "Artisan Food Club",
+  "platform": "Artisan Food Club"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.605446",
+  "name": "Other (Whatsapp/Call)",
+  "platform": "Other (Whatsapp/Call)"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.610227",
+  "name": "Ankorstore",
+  "platform": "Ankorstore"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.612968",
+  "name": "POD Foods",
+  "platform": "POD Foods"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.615700",
+  "name": "Airgoods",
+  "platform": "Airgoods"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Order Platform",
+  "modified": "2026-10-22 08:15:21.618452",
+  "name": "Bulletin",
+  "platform": "Bulletin"
+ }
+]

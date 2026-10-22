@@ -5,14 +5,15 @@ from frappe.utils import flt
 
 def create_fees_journal_entry(doc, method=None):
 	"""On Sales Invoice submit: Dr fees accounts / Cr customer receivable account."""
-	commission = flt(doc.get("custom_fees_commission"))
-	processing = flt(doc.get("custom_fees_processing_order"))
+	commission = flt(doc.custom_fees_commission)
+	processing = flt(doc.custom_fees_processing_order)
+	platform = doc.custom_order_method
 	if commission <= 0 and processing <= 0:
 		return
 
 	settings = frappe.db.get_value(
 		"Fees Account Settings",
-		doc.company,
+		platform,
 		["fees_commission_account", "fees_processing_order_account"],
 		as_dict=True,
 	)
