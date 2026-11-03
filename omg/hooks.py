@@ -133,6 +133,10 @@ app_license = "mit"
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
 
+override_doctype_class = {
+	"Subcontracting Order": "omg.overrides.subcontracting_order.CustomSubcontractingOrder"
+}
+
 # Document Events
 # ---------------
 # Hook on document methods and events
